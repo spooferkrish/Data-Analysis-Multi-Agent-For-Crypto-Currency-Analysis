@@ -1,83 +1,112 @@
-# Data-Analysis-Multi-Agent-For-Crypto-Currency-Analysis
+# Data Analysis Agent for Cryptocurrency Analysis
 
-An LLM-powered data analysis agent that uses LangChain, Groq, Llama 3, and Exa to analyze cryptocurrencies by fetching news, evaluating price trends, and generating a concise market report with insights and predictions.
+An LLM-powered data analysis agent that uses **LangChain, Groq, Llama 3, and Exa** to analyse cryptocurrencies. It fetches recent news, evaluates historical price trends, and generates a concise market report with insights and predictions.
 
-LLM-Powered Data Analysis Agent for Cryptocurrency Analysis
-This repository showcases the creation of an LLM-Powered Data Analysis Agent, leveraging powerful tools such as LangChain, Groq, Llama 3, and Exa for efficient data handling and analysis. It provides a framework for analyzing cryptocurrencies. A user can ask for a cryptocurrency report, which triggers an agent to gather relevant news, another agent to analyze prices, and then a final report summarizing the market and making predictions.
+## Overview
 
-Key Features
-LangChain Integration for managing LLM-powered workflows.
-Custom cryptocurrency price tool to fetch historical prices.
-News tool to get real-time cryptocurrency news.
-LLM-powered Agents for tasks like price analysis, news analysis, and report writing.
-Use of Groq for optimized inference with Llama 3 models.
-Agent-based architecture enabling task delegation and collaboration.
-Customer Communicator Agent for interactive cryptocurrency inquiries.
-News Analyst Agent for market trend analysis based on news.
-Price Analyst Agent for market analysis based on historical prices.
-Report Writer Agent that synthesizes analyses into a final report.
-Tools
-Search Tool (Exa API)
-Purpose: Used to search for and summarize the latest cryptocurrency news.
-Usage: The tool fetches relevant news based on a given query, processes the results, and returns a summary with relevant details.
-API: Exa API Key
-Cryptocurrency Price Tool
-Purpose: Retrieves the daily closing prices for a given cryptocurrency symbol for the last 60 days.
-Usage: This tool is critical for gathering historical price data to analyze trends and market predictions.
-Search Tool (Cryptocurrency News)
-Purpose: A variant of the search tool that specifically looks for cryptocurrency-related news.
-Usage: This tool integrates with the Exa tool to search for cryptocurrency news articles and prepare summaries for analysis.
-Groq for Inference
-Purpose: Uses the Llama 3 model in combination with Groq for enhanced inference and processing.
-Usage: Efficient model inference is achieved using Groq to process and analyze queries related to cryptocurrency trends.
-Agents
-Customer Communicator
-Role: Senior cryptocurrency customer communicator.
-Goal: Identify which cryptocurrency the customer is interested in for further research and analysis.
-Tools: Uses the search tool to gather data from various sources.
-Cryptocurrency News Analyst
-Role: Analyze the latest news related to cryptocurrency trends.
-Goal: Write a short analysis based on recent news and make a prediction about market trends (up, down, or neutral).
-Tools: Uses the cryptocurrency news tool to fetch articles and summarize them.
-Cryptocurrency Price Analyst
-Role: Analyze historical price trends of cryptocurrency.
-Goal: Produce a report with predictions based on price history, focusing on technical analysis.
-Tools: Uses the cryptocurrency price tool to gather historical data and analyze trends.
-Cryptocurrency Report Writer
-Role: Compile analysis from the news and price analysts into a final report.
-Goal: Write a comprehensive report summarizing the market trends and predictions.
-Tools: Uses the outputs from the news and price analysis agents to compose the final report.
-Tasks
-Get Cryptocurrency Interest:
-Description: The customer communicator agent asks the user which cryptocurrency they are interested in researching.
-Expected Output: The cryptocurrency symbol (e.g., BTC).
-Get News Analysis:
-Description: The news analyst uses the search tool to gather news for the selected cryptocurrency and creates a summary along with a market prediction.
-Expected Output: A one-paragraph report predicting market trends based on news.
-Get Price Analysis:
-Description: The price analyst uses the price tool to retrieve historical data for the selected cryptocurrency and provides an analysis along with a market prediction.
-Expected Output: A one-paragraph report predicting future trends based on price data.
-Write Final Report:
-Description: Combines the outputs from both the news and price analysts to create a final report summarizing market trends and predictions.
-Expected Output: A comprehensive one-paragraph report summarizing the market and making a prediction about the cryptocurrency's future.
-Example Workflow
-Get Cryptocurrency Interest: The customer specifies which cryptocurrency they want to explore (e.g., BTC).
-Get News Analysis: The news analyst searches for and analyzes the latest news related to the chosen cryptocurrency.
-Get Price Analysis: The price analyst retrieves and analyzes historical data for the cryptocurrency.
-Write Final Report: The report writer combines the findings from the news and price analysis into a final report.
-Getting Started
-To get started with the LLM-Powered Data Analysis Agent, you'll need to sign up for and obtain the following API keys, which are essential for the tools and agents involved:
+This repository demonstrates how to build an LLM-powered cryptocurrency analysis agent using modern AI tools for efficient data collection, analysis, and reporting.
 
-GROQ API Key
-Sign up at GROQ Console to get your API key.
-This key is required to interact with the Groq API, used for managing and processing data in the analysis pipeline.
+When a user requests a cryptocurrency report, the system:
 
-Exa API Key
-Sign up at Exa Dashboard to obtain your API key.
-This key allows integration with the Exa Search and Content Extraction Tool, which aids in gathering relevant data and news articles based on specific queries.
+1. Identifies the cryptocurrency of interest.
+2. Collects relevant and recent cryptocurrency news.
+3. Retrieves historical price data.
+4. Analyses market news and technical price trends.
+5. Produces a final report with insights and a market prediction.
 
-Alpha Advantage API Key
-Sign up at Alpha Advantage to acquire your API key.
-This key is needed for financial data analysis and integration with the Alpha Advantage API, offering real-time stock market data, technical indicators, and more.
+## Key Features
 
-Once you have the three API keys, you can add them to the IPython notebook of this repository and start running the code in a Google Colab notebook. Happy Coding! :)
+- **LangChain integration** for managing LLM-powered workflows.
+- **Custom cryptocurrency price tool** to retrieve historical price data.
+- **News search tool** to obtain real-time cryptocurrency news.
+- **LLM-powered agents** for news analysis, price analysis, and report generation.
+- **Groq inference** for fast processing with Llama 3 models.
+- **Agent-based architecture** that enables task delegation and collaboration.
+- **Customer Communicator Agent** for interactive cryptocurrency inquiries.
+- **News Analyst Agent** for market-trend analysis based on recent news.
+- **Price Analyst Agent** for technical analysis using historical prices.
+- **Report Writer Agent** to combine all findings into a final market report.
+
+## Tools
+
+### 1. Search Tool — Exa API
+
+**Purpose:** Searches for and summarises the latest cryptocurrency news.
+
+**Usage:** Fetches relevant articles based on a cryptocurrency query, processes the results, and returns a summary with useful details.
+
+**Required API Key:** Exa API Key
+
+### 2. Cryptocurrency Price Tool
+
+**Purpose:** Retrieves daily closing prices for a selected cryptocurrency for the previous 60 days.
+
+**Usage:** Provides historical data required to identify price movements, trends, and possible future market direction.
+
+### 3. Cryptocurrency News Tool
+
+**Purpose:** A specialised version of the search tool that finds cryptocurrency-related news articles.
+
+**Usage:** Integrates with Exa to search, extract, and prepare news summaries for further analysis.
+
+### 4. Groq Inference Tool
+
+**Purpose:** Uses Llama 3 through Groq for fast and efficient inference.
+
+**Usage:** Processes user queries and supports the analysis of cryptocurrency news, trends, and market data.
+
+## Agents
+
+### Customer Communicator Agent
+
+**Role:** Senior cryptocurrency customer communicator.
+
+**Goal:** Identifies the cryptocurrency the customer wants to research.
+
+**Tools:** Uses the search tool when relevant to gather information from reliable sources.
+
+### Cryptocurrency News Analyst Agent
+
+**Role:** Cryptocurrency news and market-trend analyst.
+
+**Goal:** Analyses recent news related to the selected cryptocurrency and predicts whether market sentiment is likely to be **upward, downward, or neutral**.
+
+**Tools:** Uses the cryptocurrency news tool to retrieve and summarise relevant articles.
+
+### Cryptocurrency Price Analyst Agent
+
+**Role:** Cryptocurrency technical and price analyst.
+
+**Goal:** Analyses historical price data and provides a prediction based on technical trends.
+
+**Tools:** Uses the cryptocurrency price tool to retrieve recent closing-price data.
+
+### Cryptocurrency Report Writer Agent
+
+**Role:** Cryptocurrency market report writer.
+
+**Goal:** Combines the news analysis and price analysis into one clear, comprehensive market report.
+
+**Tools:** Uses the outputs generated by the News Analyst and Price Analyst agents.
+
+## Tasks
+
+### 1. Get Cryptocurrency Interest
+
+**Description:** The Customer Communicator Agent asks the user which cryptocurrency they want to research.
+
+**Expected Output:** A cryptocurrency symbol, such as `BTC`, `ETH`, or `SOL`.
+
+### 2. Get News Analysis
+
+**Description:** The News Analyst Agent collects recent news for the selected cryptocurrency and creates a summary with a market prediction.
+
+**Expected Output:** A short paragraph summarising the news and predicting whether the market trend may move upward, downward, or remain neutral.
+
+### 3. Get Price Analysis
+
+**Description:** The Price Analyst Agent retrieves historical price data and identifies technical patterns or market trends.
+
+**Expected Output:** A short paragraph analysing price behaviour and predicting the likely future trend.
+
+### 4. Write Final Report
