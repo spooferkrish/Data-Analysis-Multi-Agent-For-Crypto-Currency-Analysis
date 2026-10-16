@@ -284,7 +284,7 @@ def apply_styles() -> None:
         .article p { color: var(--muted); font-size: .9rem; line-height: 1.5; margin: .35rem 0 0; }
         [data-testid='stSidebar'] { background: #0b1b2a; border-right: 1px solid var(--line); }
         [data-testid='stSidebar'] [data-testid='stImage'] { display: flex; justify-content: center; margin: -.7rem auto .2rem; }
-        [data-testid='stSidebar'] [data-testid='stImage'] img { filter: drop-shadow(0 10px 22px rgba(0,0,0,.28)); }
+        [data-testid='stSidebar'] [data-testid='stImage'] img { filter: drop-shadow(0 10px 22px rgba(0,0,0,.28)); transform: translateX(32px); }
         .brand-caption { color: var(--muted); font-size: .82rem; letter-spacing: .04em; margin: -.2rem 0 1.35rem; text-align: center; }
         [data-testid='stMetricValue'] { color: var(--teal); }
         .stButton > button { background: var(--teal); border: 0; border-radius: 6px; color: #06141c; font-weight: 700; min-height: 2.8rem; }
