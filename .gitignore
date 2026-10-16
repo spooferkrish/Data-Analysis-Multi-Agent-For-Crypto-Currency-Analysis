@@ -1,0 +1,14 @@
+﻿# Python virtual environments and bytecode
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+
+# Local installation and application logs
+pip-install*.log
+streamlit-*.log
+
+# Backend credentials (keep the example file tracked)
+**/.streamlit/secrets.toml
+.env
+**/.env

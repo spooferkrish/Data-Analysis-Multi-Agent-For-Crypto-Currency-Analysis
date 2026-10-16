@@ -2,6 +2,10 @@
 
 An LLM-powered data analysis agent that uses **LangChain, Groq, Llama 3, and Exa** to analyse cryptocurrencies. It fetches recent news, evaluates historical price trends, and generates a concise market report with insights and predictions.
 
+## Website
+
+The Streamlit website lives in `Data-Analysis-Agent-for-Cryptocurrency-Analysis/`. Run `streamlit run app.py` from that directory, then enter a coin and press **Run analysis**. Visitors do not need API keys. Set `GROQ_API_KEY` on the server for the AI report; `EXA_API_KEY` enables news and `ALPHAVANTAGE_API_KEY` is an optional price fallback. See the [website setup guide](Data-Analysis-Agent-for-Cryptocurrency-Analysis/README.md#run-the-website) for details.
+
 ## Overview
 
 This repository demonstrates how to build an LLM-powered cryptocurrency analysis agent using modern AI tools for efficient data collection, analysis, and reporting.
