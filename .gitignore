@@ -7,3 +7,8 @@ __pycache__/
 # Local installation and application logs
 pip-install*.log
 streamlit-*.log
+
+# Backend credentials (keep the example file tracked)
+**/.streamlit/secrets.toml
+.env
+**/.env

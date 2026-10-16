@@ -1,6 +1,14 @@
 # Data-Analysis-Agent-for-Cryptocurrency-Analysis
 An LLM-powered data analysis agent that uses LangChain, Groq, Llama 3, and Exa to analyze cryptocurrencies by fetching news, evaluating price trends, and generating a concise market report with insights and predictions.
 
+## Run the website
+
+Install the packages in `requirements.txt`, then run `streamlit run app.py` from this directory. Enter a coin name or ticker in the sidebar and press **Run analysis** (or Enter). That one action loads prices, current reporting, and the AI market read.
+
+Configure API keys **on the server**, using environment variables or a private `.streamlit/secrets.toml` copied from `.streamlit/secrets.toml.example`. The app reads this file beside `app.py`, even when launched from a different working directory. Environment variables take precedence; hosted Streamlit secrets are also supported. `GROQ_API_KEY` is required for the AI report. `EXA_API_KEY` enables current news; `ALPHAVANTAGE_API_KEY` is an optional price-data fallback. Do not put keys in the browser, commit them to Git, or ask visitors to enter them. If using PowerShell `$env:` assignments instead of the secrets file, start Streamlit from that same shell **after** setting the variables; an already running process does not inherit later assignments.
+
+The app can still show a price chart if the Groq key is missing, but it will explain why the AI report is unavailable. Public CoinGecko and CryptoCompare prices do not require keys.
+
 
 # LLM-Powered Data Analysis Agent for Cryptocurrency Analysis
 

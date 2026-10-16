@@ -1,11 +1,15 @@
-import os
+import re
+from html import escape
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+
+from config import get_secret
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -15,6 +19,7 @@ LOGO_PATH = APP_DIR / "assets" / "spoof-x-logo.png"
 ASSET_NAMES = {
     "bitcoin": "BTC",
     "ethereum": "ETH",
+    "binance coin": "BNB",
     "solana": "SOL",
     "dogecoin": "DOGE",
     "cardano": "ADA",
@@ -32,6 +37,7 @@ ASSET_NAMES = {
 COINGECKO_IDS = {
     "BTC": "bitcoin",
     "ETH": "ethereum",
+    "BNB": "binancecoin",
     "SOL": "solana",
     "DOGE": "dogecoin",
     "ADA": "cardano",
@@ -46,7 +52,26 @@ COINGECKO_IDS = {
     "POL": "polygon-ecosystem-token",
 }
 
-PRICE_DATA_VERSION = 2
+MARKET_GROUPS = {
+    "Top assets": ("BTC", "ETH", "SOL", "XRP", "BNB"),
+    "Smart contract networks": ("ETH", "SOL", "ADA", "DOT", "AVAX", "POL"),
+    "Payments & stores of value": ("BTC", "XRP", "LTC", "BCH", "XLM"),
+    "Meme coins": ("DOGE", "SHIB"),
+    "Infrastructure": ("LINK", "DOT", "AVAX", "POL"),
+}
+MARKET_GROUPS["All supported assets"] = tuple(COINGECKO_IDS)
+
+
+def select_market_group() -> None:
+    """Keep the selected market valid when its group changes."""
+    choices = MARKET_GROUPS[st.session_state.market_group]
+    if st.session_state.market_asset not in choices:
+        st.session_state.market_asset = choices[0]
+        st.session_state.sidebar_asset = choices[0]
+
+
+def select_market_asset() -> None:
+    st.session_state.sidebar_asset = st.session_state.market_asset
 
 
 class MarketDataUnavailable(Exception):
@@ -59,23 +84,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-
-def get_secret(name: str) -> str:
-    """Read a key from Streamlit secrets first, then the environment."""
-    try:
-        value = st.secrets.get(name, "")
-    except FileNotFoundError:
-        value = ""
-    return str(value or os.getenv(name, "")).strip()
-
-
-def get_api_key(name: str, label: str) -> str:
-    """Allow session-only key entry when the server has no configured key."""
-    configured_key = get_secret(name)
-    if configured_key:
-        return configured_key
-    return st.sidebar.text_input(label, type="password", key=f"input_{name}").strip()
 
 
 def resolve_symbol(asset: str) -> str:
@@ -283,6 +291,14 @@ def apply_styles() -> None:
         .article a { color: var(--ink); font-weight: 600; text-decoration: none; }
         .article p { color: var(--muted); font-size: .9rem; line-height: 1.5; margin: .35rem 0 0; }
         [data-testid='stSidebar'] { background: #0b1b2a; border-right: 1px solid var(--line); }
+        [data-testid='stHeader'] { height: 0; background: transparent; }
+        [data-testid='stToolbar'] { display: none; }
+        [data-testid='stAppViewContainer'] .block-container { padding-top: 1rem; }
+        .market-nav-brand { padding: .2rem 0 .4rem; }
+        .market-nav-kicker { color: var(--teal); font-size: .66rem; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+        .market-nav-title { color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; margin-top: .15rem; }
+        .market-nav-label { color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .1em; margin-bottom: .25rem; text-transform: uppercase; }
+        .market-nav-divider { border-bottom: 1px solid var(--line); margin: .15rem 0 2rem; }
         [data-testid='stSidebar'] [data-testid='stImage'] { display: flex; justify-content: center; margin: -.7rem auto .2rem; }
         [data-testid='stSidebar'] [data-testid='stImage'] img { filter: drop-shadow(0 10px 22px rgba(0,0,0,.28)); transform: translateX(32px); }
         .brand-caption { color: var(--muted); font-size: .82rem; letter-spacing: .04em; margin: -.2rem 0 1.35rem; text-align: center; }
@@ -297,73 +313,110 @@ def apply_styles() -> None:
 
 def main() -> None:
     apply_styles()
+    if "sidebar_asset" not in st.session_state:
+        st.session_state.sidebar_asset = "BTC"
+    if "market_group" not in st.session_state:
+        st.session_state.market_group = "Top assets"
+    if "market_asset" not in st.session_state:
+        st.session_state.market_asset = "BTC"
     st.sidebar.image(str(LOGO_PATH), width=190)
     st.sidebar.markdown(
         '<div class="brand-caption">AI-POWERED CRYPTO INTELLIGENCE</div>',
         unsafe_allow_html=True,
     )
-    asset = st.sidebar.text_input(
-        "Asset name or symbol", value="BTC", max_chars=40,
-        help="For example: BTC, Ethereum, or Solana.",
-    ).strip()
+    with st.sidebar.form("analysis_form"):
+        asset = st.text_input(
+            "Asset name or symbol", max_chars=40,
+            help="For example: BTC, Ethereum, or Solana.",
+            key="sidebar_asset",
+        ).strip()
+        run_analysis = st.form_submit_button("Run analysis", width="stretch")
     symbol = resolve_symbol(asset)
     if asset and symbol != asset.upper():
         st.sidebar.caption(f"Using ticker: {symbol}")
-    run_analysis = st.sidebar.button("Run analysis", width="stretch")
+    if run_analysis and symbol in COINGECKO_IDS:
+        st.session_state.market_group = "All supported assets"
+        st.session_state.market_asset = symbol
     st.sidebar.divider()
-    st.sidebar.caption("Enter API keys here if they are not available to the app. They are kept for this session only.")
-    alpha_key = get_api_key("ALPHAVANTAGE_API_KEY", "Alpha Vantage API key (optional)")
-    exa_key = get_api_key("EXA_API_KEY", "Exa API key (optional)")
-    groq_key = get_api_key("GROQ_API_KEY", "Groq API key")
-    st.sidebar.divider()
-    st.sidebar.caption("Data refreshes every 15 minutes. Market insights are informational, not financial advice.")
+    st.sidebar.caption("Market data may be cached for up to 15 minutes. Insights are informational, not financial advice.")
+
+    brand, group_column, asset_column = st.columns([1.8, 1.2, 1], gap="medium")
+    with brand:
+        st.markdown(
+            '<div class="market-nav-brand"><div class="market-nav-kicker">SPOOF-X / MARKET DESK</div>'
+            '<div class="market-nav-title">Explore crypto markets</div></div>',
+            unsafe_allow_html=True,
+        )
+    with group_column:
+        st.markdown('<div class="market-nav-label">Market section</div>', unsafe_allow_html=True)
+        st.selectbox(
+            "Market section", MARKET_GROUPS, key="market_group",
+            label_visibility="collapsed", on_change=select_market_group,
+        )
+    with asset_column:
+        st.markdown('<div class="market-nav-label">Cryptocurrency</div>', unsafe_allow_html=True)
+        st.selectbox(
+            "Cryptocurrency", MARKET_GROUPS[st.session_state.market_group],
+            key="market_asset", label_visibility="collapsed", on_change=select_market_asset,
+        )
+    st.markdown('<div class="market-nav-divider"></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="eyebrow">Multi-agent market intelligence</div>', unsafe_allow_html=True)
     st.title("Read the market before it moves.")
     st.markdown('<p class="subtle">A focused view of price momentum, live reporting, and an AI-generated market read.</p>', unsafe_allow_html=True)
 
-    if not symbol:
-        st.info("Enter a cryptocurrency symbol in the sidebar to begin.")
-        return
+    if run_analysis:
+        # Clear the previous result first so a failed request never shows stale data.
+        for key in ("prices", "news", "news_error", "analysis", "analysis_error", "symbol"):
+            st.session_state.pop(key, None)
+        if not re.fullmatch(r"[A-Z0-9]{1,15}", symbol):
+            st.error("Enter a valid cryptocurrency name or ticker symbol.")
+            return
 
-    if (
-        run_analysis
-        or "prices" not in st.session_state
-        or st.session_state.get("price_data_version") != PRICE_DATA_VERSION
-    ):
+        alpha_key = get_secret("ALPHAVANTAGE_API_KEY")
+        exa_key = get_secret("EXA_API_KEY")
+        groq_key = get_secret("GROQ_API_KEY")
         with st.spinner(f"Gathering the {symbol} market signal..."):
             try:
-                prices, has_live_prices = fetch_prices(symbol, alpha_key)
+                prices, _ = fetch_prices(symbol, alpha_key)
             except MarketDataUnavailable as error:
-                # Do not show raw request errors because they can contain API keys.
                 st.error(str(error))
                 return
             news = []
-            news_error = None
+            news_error = False
             if exa_key:
                 try:
                     news = fetch_news(symbol, exa_key)
-                except Exception as error:
-                    news_error = str(error)
+                except Exception:
+                    # Provider errors may contain request details or credentials.
+                    news_error = True
             st.session_state.prices = prices
             st.session_state.news = news
             st.session_state.news_error = news_error
             st.session_state.symbol = symbol
-            st.session_state.analysis = None
-            st.session_state.has_live_prices = has_live_prices
-            st.session_state.price_data_version = PRICE_DATA_VERSION
+        if groq_key:
+            with st.spinner("Writing the market read..."):
+                try:
+                    st.session_state.analysis = generate_analysis(symbol, prices, news, groq_key)
+                except Exception:
+                    st.session_state.analysis_error = "The AI market read is temporarily unavailable. Please try again."
+        else:
+            st.session_state.analysis_error = "AI analysis is unavailable because the server has no GROQ_API_KEY configured."
+
+    if "prices" not in st.session_state or st.session_state.get("symbol") != symbol:
+        st.info("Enter a cryptocurrency name or symbol and press Run analysis to view its report.")
+        return
 
     prices = st.session_state.prices
     news = st.session_state.get("news", [])
     active_symbol = st.session_state.get("symbol", symbol)
-    has_live_prices = st.session_state.get("has_live_prices", True)
     latest = prices["close"].iloc[-1]
     change = (latest / prices["close"].iloc[0] - 1) * 100
 
     left, right = st.columns([1.35, .65], gap="large")
     with left:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.markdown(f"<span class=\"eyebrow\">{active_symbol} / USD · 60 DAY VIEW</span>", unsafe_allow_html=True)
+        st.markdown(f'<span class="eyebrow">{escape(active_symbol)} / USD · 60 DAY VIEW</span>', unsafe_allow_html=True)
         render_chart(prices, active_symbol)
         st.markdown('</div>', unsafe_allow_html=True)
     with right:
@@ -371,36 +424,37 @@ def main() -> None:
         metric_one, metric_two = st.columns(2)
         metric_one.metric("Last close", f"${latest:,.2f}")
         metric_two.metric("60d change", f"{change:+.2f}%")
-        st.markdown('<div class="panel"><span class="metric-label">Signal state</span><div class="metric-value">Awaiting synthesis</div><p class="subtle">Run the analyst crew to combine price action and current reporting.</p></div>', unsafe_allow_html=True)
+        signal_state = "Report ready" if st.session_state.get("analysis") else "Report unavailable"
+        st.markdown(f'<div class="panel"><span class="metric-label">Signal state</span><div class="metric-value">{signal_state}</div></div>', unsafe_allow_html=True)
 
     st.markdown("### Current reporting")
     if news:
         news_columns = st.columns(2)
         for index, article in enumerate(news):
             with news_columns[index % 2]:
-                st.markdown(
-                    f'<div class="article"><a href="{article["url"]}" target="_blank">{article["title"]}</a><p>{article["summary"]}</p></div>',
-                    unsafe_allow_html=True,
-                )
+                url = str(article.get("url", ""))
+                title = escape(str(article.get("title", "Untitled article")))
+                summary = escape(str(article.get("summary", "")))
+                parsed_url = urlparse(url)
+                if parsed_url.scheme in ("http", "https") and parsed_url.netloc:
+                    heading = f'<a href="{escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">{title}</a>'
+                else:
+                    heading = title
+                st.markdown(f'<div class="article">{heading}<p>{summary}</p></div>', unsafe_allow_html=True)
     else:
         if st.session_state.get("news_error"):
-            st.warning(f"Prices loaded, but current reporting is unavailable: {st.session_state.news_error}")
-        elif exa_key:
+            st.warning("Prices loaded, but current reporting is temporarily unavailable.")
+        elif get_secret("EXA_API_KEY"):
             st.info("No current reporting was found for this asset.")
         else:
-            st.info("Add EXA_API_KEY to show current reporting.")
+            st.info("Current reporting is unavailable because the server has no EXA_API_KEY configured.")
 
     st.markdown("### Analyst synthesis")
-    if st.button("Generate market read", type="primary", disabled=not groq_key):
-        with st.spinner("The analyst crew is writing the market read..."):
-            try:
-                st.session_state.analysis = generate_analysis(active_symbol, prices, news, groq_key)
-            except Exception as error:
-                st.error(f"Could not generate analysis: {error}")
-    if not groq_key:
-        st.info("Enter a Groq API key in the sidebar to enable the AI market read.")
-    elif st.session_state.get("analysis"):
-        st.markdown(f'<div class="panel">{st.session_state.analysis}</div>', unsafe_allow_html=True)
+    if st.session_state.get("analysis"):
+        with st.container(border=True):
+            st.markdown(st.session_state.analysis)
+    elif st.session_state.get("analysis_error"):
+        st.warning(st.session_state.analysis_error)
 
 
 if __name__ == "__main__":
